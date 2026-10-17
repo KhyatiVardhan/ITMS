@@ -1,0 +1,160 @@
+
+.console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border-bottom: 3px solid #0176d3;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    background: #0176d3;
+    border-radius: 0.6rem;
+}
+
+.brand-text {
+    min-width: 0;
+}
+
+.console-title {
+    margin: 0;
+    color: #12315b;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.console-subtitle {
+    margin: 0.25rem 0 0;
+    color: #526984;
+    font-size: 0.875rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+@media screen and (max-width: 600px) {
+    .console-header {
+        padding: 0.75rem;
+    }
+
+    .brand-section {
+        gap: 0.625rem;
+    }
+
+    .console-title {
+        font-size: 1.1rem;
+    }
+
+    .console-subtitle {
+        display: none;
+    }
+
+    .brand-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .header-actions {
+        gap: 0.25rem;
+    }
+}
+
+
+/* Dashboard summary layout */
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+    padding: 1.5rem;
+    align-items: stretch;
+}
+
+/* Shared styling for all four cards */
+.summary-card {
+    min-width: 0;
+}
+
+/* Medium screens: two cards per row */
+@media screen and (max-width: 1024px) {
+    .dashboard-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+}
+
+/* Small screens: one card per row */
+@media screen and (max-width: 600px) {
+    .dashboard-summary {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.open-cases-icon {
+    --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+.sla-risk-icon {
+    --slds-c-icon-color-foreground-default: #b78103;
+}
+
+.sla-breached-icon {
+    --slds-c-icon-color-foreground-default: #ba0517;
+}
+
+.resolved-icon {
+    --slds-c-icon-color-foreground-default: #2e844a;
+}
+
+.combobox-section {
+    display: flex;
+    gap: 1rem;
+    padding: 0 1rem 1rem;
+    align-items: flex-start;
+}
+
+.combobox-section lightning-combobox {
+    flex: 0 1 280px;
+    max-width: 320px;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .combobox-section {
+        flex-direction: column;
+    }
+
+    .combobox-section lightning-combobox {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+}

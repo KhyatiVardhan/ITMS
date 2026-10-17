@@ -1,0 +1,186 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 10-17-2026
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+    <header class="console-header">
+        <div class="brand-section">
+            <div class="brand-icon">
+                <lightning-icon
+                    icon-name="utility:case"
+                    alternative-text="IT Support"
+                    size="medium"
+                    variant="inverse">
+                </lightning-icon>
+            </div>
+            <div class="brand-text">
+                <h1 class="console-title">IT Support Console</h1>
+                <p class="console-subtitle">
+                    Manage support requests and monitor SLA compliance
+                </p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                variant="border-filled"
+                onclick={handleRefresh}>
+            </lightning-button-icon>
+
+            <lightning-button-icon
+                icon-name="utility:notification"
+                alternative-text="Notifications"
+                title="Notifications"
+                variant="border-filled">
+            </lightning-button-icon>
+        </div>
+    </header>
+
+    <section class="dashboard-summary">
+        <div class="summary-card">
+            <!-- Open Cases Card -->
+            <lightning-card>
+                <div slot="title" class="card-title">
+                    <lightning-icon
+                        icon-name="utility:inbox"
+                        alternative-text="Open Cases"
+                        size="small"
+                        class="open-cases-icon">
+                    </lightning-icon>
+                    <span>Open Cases</span>
+                </div>
+                <div class="slds-p-horizontal_small">
+                    <p class="slds-text-heading_large">{caseCount}</p>
+                    <p class="slds-text-body_small">Cases not yet closed</p>
+                </div>
+            </lightning-card>
+        </div>
+
+        <div class="summary-card">
+            <!-- SLA At Risk -->
+            <lightning-card>
+                <div slot="title" class="card-title">
+                    <lightning-icon
+                        icon-name="utility:clock"
+                        alternative-text="SLA At Risk"
+                        size="small"
+                        class="sla-risk-icon">
+                    </lightning-icon>
+                    <span>SLA At Risk</span>
+                </div>
+                <div class="slds-p-horizontal_small">
+                    <p class="slds-text-heading_large">{slaAtRiskCount}</p>
+                    <p class="slds-text-body_small">Approaching deadlines</p>
+                </div>
+            </lightning-card>
+        </div>
+
+        <div class="summary-card">
+            <!-- SLA Breached content -->
+             <lightning-card>
+                <div slot="title" class="card-title">
+                    <lightning-icon
+                        icon-name="utility:warning"
+                        alternative-text="SLA Breached"
+                        size="small"
+                        class="sla-breached-icon">
+                    </lightning-icon>
+                    <span>SLA Breached</span>
+                </div>
+                <div class="slds-p-horizontal_small">
+                    <p class="slds-text-heading_large">{slaBreachedCount}</p>
+                    <p class="slds-text-body_small">Cases past SLA</p>
+                </div>
+            </lightning-card>
+        </div>
+
+        <div class="summary-card">
+            <!-- Resolved Today content -->
+            <lightning-card>
+                <div slot="title" class="card-title">
+                    <lightning-icon
+                        icon-name="utility:success"
+                        alternative-text="SLA Resolved Today"
+                        size="small"
+                        class="resolved-icon">
+                    </lightning-icon>
+                    <span>Resolved Today</span>
+                </div>
+                <div class="slds-p-horizontal_small">
+                    <p class="slds-text-heading_large">{casesResolvedTodayCount}</p>
+                    <p class="slds-text-body_small">Cases closed today</p>
+                </div>
+            </lightning-card>
+        </div>
+    </section>
+
+    <section class="open-cases-section">
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading Cases" size="medium"></lightning-spinner>
+        </template>
+        <template lwc:if={hasCases}>
+            <lightning-card title="Cases">
+                <div class="combobox-section">
+                    <lightning-combobox
+                        name="priority"
+                        label="Priority"
+                        value={priorityValue}
+                        placeholder="Select Priority"
+                        options={priorityOps}
+                        onchange={handleChangeFilter} >
+                    </lightning-combobox>
+                    <lightning-combobox
+                        name="status"
+                        label="Status"
+                        value={statusValue}
+                        placeholder="Select Status"
+                        options={statusOps}
+                        onchange={handleChangeFilter} >
+                    </lightning-combobox>
+                </div>
+                <lightning-datatable
+                    key-field="Id"
+                    data={cases}
+                    columns={columns}
+                    onrowaction={handleRowAction}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </lightning-card>
+        </template>
+        <template lwc:if={hasNoCases}>
+            <lightning-card title="Open Cases">
+                <div class="combobox-section">
+                    <lightning-combobox
+                        name="priority"
+                        label="Priority"
+                        value={priorityValue}
+                        placeholder="Select Priority"
+                        options={priorityOps}
+                        onchange={handleChangeFilter} >
+                    </lightning-combobox>
+                    <lightning-combobox
+                        name="status"
+                        label="Status"
+                        value={statusValue}
+                        placeholder="Select Status"
+                        options={statusOps}
+                        onchange={handleChangeFilter} >
+                    </lightning-combobox>
+                </div>
+                <div class="slds-p-around_medium slds-text-align_center">
+                    No cases found.
+                </div>
+            </lightning-card>
+        </template>
+        <template lwc:if={error}>
+            <div class="slds-text-color_error">
+                <p>Error loading cases: {errorMessage}</p>
+            </div>
+        </template>        
+    </section>
+</template>
