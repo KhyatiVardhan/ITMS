@@ -3,10 +3,12 @@ import getOpenCasesCount from '@salesforce/apex/CaseSupportConsoleController.get
 import getSlaAtRiskCount from '@salesforce/apex/CaseSupportConsoleController.getSlaAtRiskCount';
 import getSlaBreachedCount from '@salesforce/apex/CaseSupportConsoleController.getSlaBreachedCount';
 import getResolvedTodayCount from '@salesforce/apex/CaseSupportConsoleController.getResolvedTodayCount';
-import getFilteredCases from '@salesforce/apex/CaseSupportConsoleController.getFilteredCases'
+import getFilteredCases from '@salesforce/apex/CaseSupportConsoleController.getFilteredCases';
+import getFilteredCasesCount from '@salesforce/apex/CaseSupportConsoleController.getFilteredCasesCount';
 import { refreshApex} from '@salesforce/apex';
 import { NavigationMixin } from 'lightning/navigation';
 import CASE_OBJ from '@salesforce/schema/Case';
+import caseCreateModal from 'c/caseCreateModal';
 
 const PRIORITY_OPTIONS = [
     { label: 'All', value: 'All' },
@@ -34,6 +36,37 @@ const COLUMNS = [
     {label : 'Status' , fieldName : 'Status'},
     {label : 'Category' , fieldName : 'Ticket_Category__c'},
     {label : 'SLA Breached' , fieldName : 'SLA_Breached__c', type : 'boolean'},
+    {label : 'SLA Status' , fieldName : 'slaStatus' , type : 'text' , 
+        cellAttributes: {
+            class: { fieldName: 'slaStatusClass' }
+        }
+    },
+    {
+        label: 'SLA Response',
+        fieldName: 'SLA_Response_Due__c',
+        type: 'date',
+        typeAttributes: {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }
+    },
+    {
+        label: 'SLA Resolution',
+        fieldName: 'SLA_Resolution_Due__c',
+        type: 'date',
+        typeAttributes: {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }
+    },
     {
         type: 'action',
         typeAttributes: { rowActions: ACTIONS },
@@ -61,6 +94,8 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
     statusValue = 'All';
     pageSize = 50;
     offsetValue = 0;
+    wiredFilterCasesCountResult = null;
+    filteredCasesCountError = null;
 
     filterParams = {
         priority : 'All',
@@ -75,13 +110,34 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
     wiredFilteredCases(result){
         this.wiredFilterCasesResult = result;
         if(result.data !== undefined){
-            this.cases = result.data;
+            this.cases = result.data.map(caseRecord => {
+                const slaStatus = this.getSlaStatus(caseRecord);
+
+                return {
+                    ...caseRecord,
+                    slaStatus: slaStatus,
+                    slaStatusClass: this.getSlaStatusClass(slaStatus)
+                };
+            });
             this.error = null;
             this.isLoading = false;
         } else if (result.error) {
             this.error = result.error;
             this.cases = [];
             this.isLoading = false;
+        }
+    }
+
+    @wire(getFilteredCasesCount , { request : '$filterParams'})
+    wiredFilterCasesCount(result){
+        console.log('Filtered count wire executed', result);
+        this.wiredFilterCasesCountResult = result;
+        if(result.data !== undefined){
+            console.log('Filtered Cases Count:', result.data);
+            this.filteredCasesCountError = null;
+        } else if (result.error) {
+            console.error('Filtered Count Error:', JSON.stringify(result.error));
+            this.filteredCasesCountError = result.error;
         }
     }
 
@@ -128,6 +184,21 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
         }
     }
 
+    getSlaStatusClass(status) {
+        switch (status) {
+            case 'Breached':
+                return 'slds-text-color_error';
+            case 'At Risk':
+                return 'slds-text-color_warning';
+            case 'On Track':
+                return 'slds-text-color_success';
+            case 'Closed':
+                return 'slds-text-color_weak';
+            default:
+                return '';
+        }
+    }
+
     get casesResolvedTodayCount(){
         return this.wiredCasesResolvedTodayCountResult?.data ?? 0;
     }
@@ -166,7 +237,8 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
                 refreshApex(this.wiredCasesCountResult),
                 refreshApex(this.wiredSlaAtRiskCountResult),
                 refreshApex(this.wiredSlaBreachedCountResult),
-                refreshApex(this.wiredCasesResolvedTodayCountResult)
+                refreshApex(this.wiredCasesResolvedTodayCountResult),
+                refreshApex(this.wiredFilterCasesCountResult)
             ]);
         }
         catch(error){
@@ -221,5 +293,102 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
             pageSize: this.pageSize,
             offsetValue: this.offsetValue
         };
+    }
+
+    get filteredCasesCount() {
+        return this.wiredFilterCasesCountResult?.data ?? 0;
+    }
+
+    get currentPage() {
+        return Math.floor(this.offsetValue / this.pageSize) + 1;
+    }
+
+    get totalPages() {
+        return Math.ceil(this.filteredCasesCount / this.pageSize);
+    }
+
+    get isPreviousDisabled() {
+        return this.offsetValue === 0;
+    }
+
+    get isNextDisabled() {
+        return this.filteredCasesCount === 0 ||
+            this.offsetValue + this.pageSize >= this.filteredCasesCount;
+    }
+
+    handlePrevious() {
+        if (this.offsetValue > 0) {
+            this.offsetValue = Math.max(
+                0,
+                this.offsetValue - this.pageSize
+            );
+
+            this.updateFilterParams();
+        }
+    }
+
+    handleNext() {
+        if (!this.isNextDisabled) {
+            this.offsetValue += this.pageSize;
+
+            this.updateFilterParams();
+        }
+    }
+
+    updateFilterParams() {
+        this.filterParams = {
+            priority: this.priorityValue,
+            status: this.statusValue,
+            pageSize: this.pageSize,
+            offsetValue: this.offsetValue
+        };
+    }
+
+    getSlaStatus(caseRecord) {
+        if (caseRecord.SLA_Breached__c === true) {
+            return 'Breached';
+        }
+        
+        if (caseRecord.Status === 'Closed') {
+            return 'Closed';
+        }
+
+        const currentTime = Date.now();
+        const twoHoursInMs = 2 * 60 * 60 * 1000;
+        const riskDeadline = currentTime + twoHoursInMs;
+
+        const responseDue = caseRecord.SLA_Response_Due__c
+            ? new Date(caseRecord.SLA_Response_Due__c).getTime()
+            : null;
+
+        const responseAtRisk =
+            caseRecord.First_Response_At__c == null &&
+            responseDue !== null &&
+            responseDue >= currentTime &&
+            responseDue <= riskDeadline;
+
+        const resolutionDue = caseRecord.SLA_Resolution_Due__c
+            ? new Date(caseRecord.SLA_Resolution_Due__c).getTime()
+            : null;
+
+        const resolutionAtRisk =
+            resolutionDue !== null &&
+            resolutionDue >= currentTime &&
+            resolutionDue <= riskDeadline;
+
+        if (responseAtRisk || resolutionAtRisk) {
+            return 'At Risk';
+        }
+        return 'On Track';
+    }
+
+    async handleNewCaseButton(event){
+        this.isNewCaseModalOpen = true;
+        const result = await caseCreateModal.open({
+            header : 'New Case'
+        });
+        if(result === 'success'){
+            this.handleRefresh();
+        }
     }
 }

@@ -2,7 +2,7 @@
   @description       : 
   @author            : ChangeMeIn@UserSettingsUnder.SFDoc
   @group             : 
-  @last modified on  : 10-17-2026
+  @last modified on  : 10-19-2026
   @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 -->
 <template>
@@ -125,24 +125,31 @@
         </template>
         <template lwc:if={hasCases}>
             <lightning-card title="Cases">
-                <div class="combobox-section">
-                    <lightning-combobox
-                        name="priority"
-                        label="Priority"
-                        value={priorityValue}
-                        placeholder="Select Priority"
-                        options={priorityOps}
-                        onchange={handleChangeFilter} >
-                    </lightning-combobox>
-                    <lightning-combobox
-                        name="status"
-                        label="Status"
-                        value={statusValue}
-                        placeholder="Select Status"
-                        options={statusOps}
-                        onchange={handleChangeFilter} >
-                    </lightning-combobox>
-                </div>
+                <div class="filter-toolbar">
+                    <div class="combobox-section">
+                        <lightning-combobox
+                            name="priority"
+                            label="Priority"
+                            value={priorityValue}
+                            placeholder="Select Priority"
+                            options={priorityOps}
+                            onchange={handleChangeFilter} >
+                        </lightning-combobox>
+                        <lightning-combobox
+                            name="status"
+                            label="Status"
+                            value={statusValue}
+                            placeholder="Select Status"
+                            options={statusOps}
+                            onchange={handleChangeFilter} >
+                        </lightning-combobox>                        
+                    </div>
+                    <lightning-button
+                        label="New Case"
+                        variant="brand"
+                        onclick={handleNewCaseButton}
+                    ></lightning-button>
+                </div>                
                 <lightning-datatable
                     key-field="Id"
                     data={cases}
@@ -150,6 +157,21 @@
                     onrowaction={handleRowAction}
                     hide-checkbox-column>
                 </lightning-datatable>
+                <div class="pagination-container">
+                    <lightning-button
+                        label="Previous"
+                        onclick={handlePrevious}
+                        disabled={isPreviousDisabled}
+                        class="pagination-button"
+                    ></lightning-button> 
+                    <span class="page-indicator">Page {currentPage} of {totalPages}</span>
+                    <lightning-button
+                        label="Next"
+                        onclick={handleNext}
+                        disabled={isNextDisabled}
+                        class="pagination-button">
+                    </lightning-button>
+                </div>
             </lightning-card>
         </template>
         <template lwc:if={hasNoCases}>

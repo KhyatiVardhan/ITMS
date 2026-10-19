@@ -73,8 +73,8 @@ public with sharing class CaseSupportConsoleController {
 
         List<String> conditions = new List<String>();
         Map<String, Object> bindValues = new Map<String, Object>();
-        String query = 'SELECT Id, CaseNumber, Subject, Status, Priority, ' +
-                       'Ticket_Category__c, SLA_Breached__c, CreatedDate ' +
+        String query = 'SELECT Id, CaseNumber, Subject, Status, Priority, First_Response_At__c, ' +
+                       'SLA_Response_Due__c, SLA_Resolution_Due__c, Ticket_Category__c, SLA_Breached__c, CreatedDate ' +
                        'FROM Case';
         
         if(String.isNotBlank(request.priority) && request.priority != 'All'){
@@ -96,5 +96,37 @@ public with sharing class CaseSupportConsoleController {
                     + ' OFFSET ' + offsetValue;
 
         return (List<Case>) Database.queryWithBinds(query, bindValues, AccessLevel.USER_MODE);
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Integer getFilteredCasesCount(CaseFilterRequest request) {
+        if (request == null) {
+            throw new AuraHandledException('Filter request cannot be null.');
+        }
+
+        List<String> conditions = new List<String>();
+        Map<String, Object> bindValues = new Map<String, Object>();
+
+        if (String.isNotBlank(request.priority) && request.priority != 'All') {
+            conditions.add('Priority = :priorityValue');
+            bindValues.put('priorityValue', request.priority);
+        }
+
+        if (String.isNotBlank(request.status) && request.status != 'All') {
+            conditions.add('Status = :statusValue');
+            bindValues.put('statusValue', request.status);
+        }
+
+        String query = 'SELECT COUNT() FROM Case';
+
+        if (!conditions.isEmpty()) {
+            query += ' WHERE ' + String.join(conditions, ' AND ');
+        }
+
+        return (Integer) Database.countQueryWithBinds(
+            query,
+            bindValues,
+            AccessLevel.USER_MODE
+        );
     }
 }
