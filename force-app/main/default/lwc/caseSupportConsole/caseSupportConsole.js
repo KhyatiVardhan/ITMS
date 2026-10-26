@@ -9,6 +9,7 @@ import { refreshApex} from '@salesforce/apex';
 import { NavigationMixin } from 'lightning/navigation';
 import CASE_OBJ from '@salesforce/schema/Case';
 import caseCreateModal from 'c/caseCreateModal';
+import caseEditModal from 'c/caseEditModal';
 
 const PRIORITY_OPTIONS = [
     { label: 'All', value: 'All' },
@@ -26,7 +27,8 @@ const STATUS_OPTIONS = [
 ];
 
 const ACTIONS = [
-    { label: 'View', name: 'view' }
+    { label: 'View', name: 'view' },
+    { label: 'Edit', name: 'edit'}
 ];
 
 const COLUMNS = [
@@ -251,12 +253,24 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
 
     handleRowAction(event){
         const actionName = event.detail.action.name;
-        console.log('Row action triggered:', actionName, 'for case:', event.detail.row);
         const caseId = event.detail.row.Id;
         if(actionName === 'view'){
             this.navigateToCaseDetail(caseId);
         }
+        if(actionName === 'edit'){
+            this.handleEditAction(caseId);
+        }
     }
+
+    async handleEditAction(caseId){
+        const result = await caseEditModal.open({
+                header : 'Edit Case',
+                recordId : caseId
+            });
+            if(result === 'success'){
+                this.handleRefresh();
+            }
+        }
 
     navigateToCaseDetail = (caseId)=>{
         this[NavigationMixin.GenerateUrl]({
@@ -272,7 +286,7 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
         })
         .catch((error) => {
             console.error('Error generating navigation URL:', error);
-        });
+        })
     }
 
     handleChangeFilter(event){
@@ -383,7 +397,6 @@ export default class CaseSupportConsole extends NavigationMixin(LightningElement
     }
 
     async handleNewCaseButton(event){
-        this.isNewCaseModalOpen = true;
         const result = await caseCreateModal.open({
             header : 'New Case'
         });

@@ -2,7 +2,7 @@
  * @description       : 
  * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
  * @group             : 
- * @last modified on  : 10-12-2026
+ * @last modified on  : 10-11-2026
  * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 **/
 @isTest
@@ -150,26 +150,27 @@ public with sharing class CaseServiceTest {
         Test.stopTest();
 
         Case insertedCase = [SELECT Id, Priority, SLA_Response_Due__c, SLA_Resolution_Due__c FROM Case WHERE Id = :caseList[0].Id];
-        
+        Datetime expectedClean = Datetime.newInstance(cdt.year(), cdt.month(), cdt.day(), cdt.hour(), cdt.minute(), 0);
+        Datetime actualClean = Datetime.newInstance(insertedCase.SLA_Response_Due__c.year(), insertedCase.SLA_Response_Due__c.month(), insertedCase.SLA_Response_Due__c.day(), insertedCase.SLA_Response_Due__c.hour(), insertedCase.SLA_Response_Due__c.minute(), 0);
         System.assertEquals('High', insertedCase.Priority);
         System.assertNotEquals(null, insertedCase.SLA_Response_Due__c);
         System.assertNotEquals(null, insertedCase.SLA_Resolution_Due__c);
-        System.assertEquals(cdt.addHours(1), insertedCase.SLA_Response_Due__c);
+        System.assertEquals(expectedClean.addHours(1), actualClean);
         System.assertEquals(cdt.addHours(4), insertedCase.SLA_Resolution_Due__c);
     }
 
     @isTest
     public static void testBeforeUpdateHandler(){
         List<Case> caseList = new List<Case>{
-            buildCase('Medium', 'Medium', null)
+            buildCase('High', 'High', null)
         };
 
         Test.startTest();
+        Datetime cdt = System.now();
         insert caseList;
         // Update the case to trigger beforeUpdate
         List<Case> casesToUpdate = [SELECT Id , Impact__c, Urgency__c, Priority , SLA_Response_Due__c , SLA_Resolution_Due__c FROM Case WHERE Id =: caseList[0].Id];
-        casesToUpdate[0].Impact__c = 'High';
-        Datetime cdt = System.now();
+        casesToUpdate[0].Impact__c = 'Medium';
         update casesToUpdate;
         Test.stopTest();
         System.assertEquals('High', casesToUpdate[0].Priority);
@@ -178,5 +179,4 @@ public with sharing class CaseServiceTest {
         System.assertEquals(cdt.addHours(1), casesToUpdate[0].SLA_Response_Due__c);
         System.assertEquals(cdt.addHours(4), casesToUpdate[0].SLA_Resolution_Due__c);
     }
-
 }

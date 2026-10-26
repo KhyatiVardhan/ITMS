@@ -1,0 +1,41 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 10-19-2026
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+    <lightning-modal-header label={header}>
+        
+    </lightning-modal-header>
+    <lightning-modal-body>
+        <div class="record-form slds-p-around_medium">
+            <lightning-record-edit-form 
+                object-api-name={caseObject}
+                record-id={recordId}
+                onsuccess={handleSuccess}
+                onerror={handleError}
+                onsubmit={handleSubmit}>
+
+                <lightning-input-field field-name="Subject" required></lightning-input-field>
+                <lightning-input-field field-name="Description"></lightning-input-field>
+                <lightning-input-field field-name="Status"></lightning-input-field>
+                <lightning-input-field field-name="Origin"></lightning-input-field>
+                <lightning-input-field field-name="Impact__c" required></lightning-input-field>
+                <lightning-input-field field-name="Urgency__c" required></lightning-input-field>
+
+                <lightning-button
+                    type="submit"
+                    label="Save"
+                    variant="brand"
+                    disabled={isDisabled}>
+                </lightning-button>
+
+            </lightning-record-edit-form>
+        </div>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button variant="neutral" label="Close" onclick={handleClose}></lightning-button>
+    </lightning-modal-footer>
+</template>
