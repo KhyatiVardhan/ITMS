@@ -2,7 +2,7 @@
  * @description       : 
  * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
  * @group             : 
- * @last modified on  : 10-10-2026
+ * @last modified on  : 10-28-2026
  * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 **/
 public with sharing class CaseTriggerHandler {
@@ -43,6 +43,20 @@ public with sharing class CaseTriggerHandler {
         }
         if(!casesToSLAUpdate.isEmpty()){
             CaseService.calculateSLA(casesToSLAUpdate);
+        }
+    }
+
+    public static void afterInsert(List<Case> newCases){
+        Set<Id> casesToProcessJira = new Set<Id>();
+        for(Case rec : newCases){
+            Boolean isType = new Set<String>{'Mechanical', 'Electrical', 'Electronic', 'Structural'}.contains(rec.Type);
+            if(isType && String.isNotBlank(rec.Subject) && String.isNotBlank(rec.Description)
+               && rec.Jira_Issue_Key__c == null && rec.Priority == 'High'){
+                casesToProcessJira.add(rec.Id);
+            }
+        }
+        if(!casesToProcessJira.isEmpty()){
+            JiraIntegrationService.createJiraIssues(casesToProcessJira);
         }
     }
 }
